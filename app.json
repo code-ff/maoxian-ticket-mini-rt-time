@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/lines/lines"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "茂县公交",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#edf2f0",
+    "backgroundTextStyle": "dark",
+    "navigationStyle": "custom",
+    "enablePullDownRefresh": false
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

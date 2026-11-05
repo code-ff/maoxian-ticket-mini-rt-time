@@ -1,0 +1,49 @@
+{
+  "waiting": {
+    "lineCode": "249210",
+    "stationCode": "144495",
+    "success": true,
+    "sj": " 首 06:00 末 18:30",
+    "lineName": "大邑210路",
+    "lastStationName": "王泗镇站",
+    "stationName": "大邑高铁站",
+    "time": "等待发车",
+    "upDown": "0"
+  },
+  "arrived": {
+    "lineCode": "249210",
+    "stationCode": "144726",
+    "distance": "车辆到站",
+    "success": true,
+    "sj": " 首 06:00 末 18:30",
+    "lineName": "大邑210路",
+    "lastStationName": "王泗镇站",
+    "stationName": "红光社区站",
+    "time": "车辆到站",
+    "upDown": "0"
+  },
+  "soon": {
+    "lineCode": "249210",
+    "stationCode": "144496",
+    "distance": "870米",
+    "success": true,
+    "sj": " 首 06:00 末 18:30",
+    "lineName": "大邑210路",
+    "lastStationName": "王泗镇站",
+    "stationName": "锦绣一方站",
+    "time": "即将到站",
+    "upDown": "0"
+  },
+  "eta": {
+    "lineCode": "249210",
+    "stationCode": "144724",
+    "distance": "1.8公里",
+    "success": true,
+    "sj": " 首 06:00 末 18:30",
+    "lineName": "大邑210路",
+    "lastStationName": "王泗镇站",
+    "stationName": "气象局站",
+    "time": "3分钟·2站",
+    "upDown": "0"
+  }
+}

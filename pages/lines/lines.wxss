@@ -1,0 +1,212 @@
+/* ============================================================
+   茂县公交 · 线路查询页 + 线路详情层 样式
+   设计 Token 沿用原型（DESIGN-SPEC.md）：山水青绿 #087f66 主色，羌红 #c2553a 点缀
+   尺寸由原型 px 按 2x 转为 rpx（设计稿 750 宽）
+   ============================================================ */
+page {
+  /* 品牌青绿梯度 */
+  --mx-g-900:#043a31; --mx-g-800:#064e44; --mx-g-700:#056c55; --mx-g-600:#087f66;
+  --mx-g-500:#0a9b7d; --mx-g-400:#19b58c; --mx-g-300:#5fcfa9; --mx-g-200:#a9dccb;
+  --mx-g-100:#d2ebe2; --mx-g-50:#e7f4ef; --mx-g-25:#f1f9f6;
+  /* 中性 / 文本 */
+  --mx-bg:#edf2f0; --mx-surface:#ffffff; --mx-surface-2:#f6faf8;
+  --mx-ink:#12201b; --mx-ink-2:#46554e; --mx-ink-3:#85958d;
+  --mx-line:#dde8e3; --mx-line-soft:#eef3f1;
+  /* 语义色 */
+  --mx-qiang:#c2553a; --mx-qiang-soft:#f7e9e3;
+  --mx-amber:#d9912b; --mx-amber-soft:#fbf1dd;
+  --mx-info:#2b7de0;
+  /* 字体 */
+  --mx-font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", "Helvetica Neue", Helvetica, Roboto, system-ui, sans-serif;
+  --mx-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace, Menlo, monospace;
+  /* 圆角 */
+  --r-card:56rpx; --r-lg:44rpx; --r-md:32rpx; --r-sm:24rpx; --r-pill:999rpx;
+  /* 阴影 */
+  --sh-card:0 16rpx 44rpx rgba(8,60,49,0.06), 0 4rpx 12rpx rgba(8,60,49,0.04);
+  --sh-card-h:0 28rpx 68rpx rgba(8,60,49,0.12), 0 8rpx 20rpx rgba(8,60,49,0.06);
+  --sh-float:0 20rpx 60rpx rgba(6,78,68,0.18);
+}
+
+view, text, input, image { box-sizing: border-box; }
+input { font-family: var(--mx-font); }
+
+.screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--mx-bg);
+  font-family: var(--mx-font);
+  color: var(--mx-ink);
+  overflow: hidden;
+}
+.screen.locked { overflow: hidden; }
+
+/* 状态栏占位（系统已绘制时间/胶囊，此处仅占位与配色） */
+.statusbar { flex: 0 0 auto; background: #fff; }
+.statusbar.dark { background: transparent; }
+
+/* 导航栏（居中标题；右上胶囊由系统提供） */
+.navbar {
+  flex: 0 0 auto;
+  height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-bottom: 2rpx solid var(--mx-line-soft);
+  position: relative;
+}
+.navbar.transparent { background: transparent; border-bottom: none; }
+.nav-title { font-size: 34rpx; font-weight: 600; letter-spacing: 0.5rpx; }
+.nav-back {
+  position: absolute; left: 20rpx; top: 50%; transform: translateY(-50%);
+  width: 64rpx; height: 64rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52rpx; line-height: 1; color: #fff;
+}
+
+/* 列表滚动区 */
+.pages { flex: 1; min-height: 0; }
+
+/* 搜索框 */
+.search-row {
+  margin: 20rpx 32rpx 8rpx;
+  background: var(--mx-surface);
+  border-radius: var(--r-pill);
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 22rpx 32rpx;
+  box-shadow: var(--sh-card);
+  border: 2rpx solid var(--mx-line-soft);
+}
+.search-ic {
+  flex: 0 0 auto; position: relative;
+  width: 30rpx; height: 30rpx;
+  border: 4rpx solid var(--mx-g-600); border-radius: 50%;
+}
+.search-ic::after {
+  content: ''; position: absolute; right: -8rpx; bottom: -6rpx;
+  width: 14rpx; height: 4rpx; background: var(--mx-g-600);
+  border-radius: 4rpx; transform: rotate(45deg);
+}
+.search-input { flex: 1; font-size: 28rpx; color: var(--mx-ink); }
+.search-ph { color: var(--mx-ink-3); }
+
+/* 线路卡片列表 */
+.line-list { padding: 16rpx 0 40rpx; }
+.line-card {
+  background: var(--mx-surface); border-radius: var(--r-card); box-shadow: var(--sh-card);
+  margin: 0 32rpx 28rpx; overflow: hidden; border: 2rpx solid var(--mx-line-soft);
+}
+.lc-top { display: flex; align-items: center; gap: 20rpx; padding: 32rpx 36rpx 24rpx; }
+.lc-name { font-size: 38rpx; font-weight: 700; letter-spacing: -0.4rpx; }
+.lc-dirs { padding: 0 28rpx 32rpx; display: flex; flex-direction: column; gap: 18rpx; }
+.dir-item {
+  display: flex; align-items: center; gap: 22rpx;
+  background: var(--mx-surface-2); padding: 22rpx 28rpx; border-radius: var(--r-lg);
+}
+.dir-item:active { background: var(--mx-g-50); }
+.dir-endpoint { flex: 1; min-width: 0; }
+.de-row { display: flex; align-items: center; font-size: 29rpx; font-weight: 600; color: var(--mx-ink); }
+.de-arrow { color: var(--mx-g-500); font-weight: 700; margin: 0 8rpx; }
+.de-sub { font-size: 23rpx; color: var(--mx-ink-3); margin-top: 4rpx; font-family: var(--mx-mono); letter-spacing: 0.5rpx; }
+.dir-time {
+  flex: 0 0 auto; font-family: var(--mx-mono); font-size: 24rpx; font-weight: 600; color: var(--mx-g-700);
+  background: var(--mx-g-50); padding: 10rpx 22rpx; border-radius: var(--r-pill);
+}
+.dir-chev { color: var(--mx-ink-3); flex: 0 0 auto; font-size: 32rpx; }
+.empty { text-align: center; color: var(--mx-ink-3); padding: 96rpx 0; font-size: 28rpx; }
+
+/* ============ 线路详情滑入层 ============ */
+.detail {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 40;
+  background: var(--mx-bg);
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform .42s cubic-bezier(.165,.84,.44,1);
+  visibility: hidden;
+}
+.detail.open { transform: translateY(0); visibility: visible; }
+
+/* 顶部青绿连续出血区 */
+.detail-top {
+  flex: 0 0 auto;
+  background: linear-gradient(150deg,#064e44 0%,#087f66 54%,#10a47e 100%);
+}
+.monitor { padding: 36rpx 40rpx 44rpx; color: #fff; position: relative; overflow: hidden; }
+/* 羌寨碉楼剪影（对齐原型 .watchtowers）：底部白色半透明装饰，置于内容之下 */
+.watchtowers { position: absolute; left: 0; bottom: 0; width: 100%; height: 180rpx; opacity: 0.5; pointer-events: none; z-index: 0; }
+/* 微信 WXSS 不支持通配符 *，改用显式子类选择器，效果等同（内容盖在碉楼剪影之上） */
+.m-top, .m-dir, .m-meta, .m-divider, .m-stat-row, .m-arrival, .m-near { position: relative; z-index: 1; }
+.m-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28rpx; }
+.m-line {
+  font-size: 44rpx; font-weight: 800; letter-spacing: -0.6rpx;
+  background: rgba(255,255,255,0.18); padding: 10rpx 32rpx; border-radius: var(--r-pill);
+}
+.m-switch { display: flex; background: rgba(255,255,255,0.16); border-radius: var(--r-pill); padding: 6rpx; gap: 6rpx; }
+.m-switch-btn {
+  border: none; background: transparent; color: #dff3ec;
+  font-family: var(--mx-font); font-size: 26rpx; font-weight: 600;
+  padding: 12rpx 28rpx; border-radius: var(--r-pill);
+}
+.m-switch-btn.on { background: #fff; color: var(--mx-g-700); }
+.m-dir {
+  font-size: 28rpx; font-weight: 600; background: rgba(255,255,255,0.14);
+  padding: 12rpx 28rpx; border-radius: var(--r-pill);
+  display: inline-flex; align-items: center; gap: 12rpx; margin-bottom: 16rpx;
+}
+/* 首末班（对齐原型 .m-meta，位于分割线前） */
+.m-meta { display: flex; align-items: center; gap: 14rpx; font-size: 25rpx; opacity: 0.9; margin-bottom: 28rpx; }
+.m-meta .b { font-family: var(--mx-mono); font-weight: 700; opacity: 1; font-size: 26rpx; }
+.m-divider { border: none; border-top: 2rpx solid rgba(255,255,255,0.22); margin: 28rpx 0; }
+.m-stat-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20rpx; }
+.m-stat-row .lab { font-size: 26rpx; opacity: 0.9; }
+.m-stat-row .val { font-size: 28rpx; font-weight: 600; background: rgba(255,255,255,0.14); padding: 8rpx 24rpx; border-radius: var(--r-pill); }
+.m-arrival { display: flex; align-items: flex-end; gap: 20rpx; margin-top: 12rpx; }
+.m-arrival .big { font-family: var(--mx-mono); font-size: 92rpx; font-weight: 700; line-height: 0.9; letter-spacing: -2rpx; }
+.m-arrival .unit { font-size: 30rpx; font-weight: 600; opacity: 0.9; padding-bottom: 12rpx; }
+.m-arrival .sub { font-size: 24rpx; opacity: 0.85; padding-bottom: 16rpx; }
+.m-arrival.soon .big, .m-arrival.soon .sub, .m-arrival.soon .unit { color: #ffe2a8; }
+.m-near { margin-top: 24rpx; font-size: 25rpx; opacity: 0.92; display: flex; align-items: center; gap: 12rpx; }
+.m-near .b { font-weight: 700; }
+
+/* 站点时间线滚动区 */
+.pages-detail { flex: 1; min-height: 0; overflow-y: auto; background: var(--mx-bg); padding-bottom: 40rpx; }
+.route-head { display: flex; align-items: center; gap: 20rpx; padding: 16rpx 40rpx 20rpx; }
+.route-head .t { font-size: 30rpx; font-weight: 700; }
+.route-head .cnt { font-size: 24rpx; color: var(--mx-ink-3); font-family: var(--mx-mono); }
+.route-head .refresh {
+  margin-left: auto; width: 60rpx; height: 60rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mx-g-600); background: var(--mx-g-50); font-size: 38rpx;
+}
+.route-head .refresh:active { background: var(--mx-g-100); }
+.route { margin: 0 32rpx; background: var(--mx-surface); border-radius: var(--r-lg); box-shadow: var(--sh-card); padding: 16rpx 28rpx; border: 2rpx solid var(--mx-line-soft); }
+
+/* 站点节点 */
+.node { position: relative; display: flex; align-items: center; gap: 26rpx; padding: 22rpx 4rpx 22rpx 56rpx; }
+.node::before { content: ''; position: absolute; left: 62rpx; top: -22rpx; bottom: -22rpx; width: 2rpx; background: var(--mx-line); }
+.node:first-child::before { top: 50%; }
+.node:last-child::before { bottom: 50%; }
+.rail { flex: 0 0 26rpx; width: 26rpx; height: 26rpx; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; }
+.dot { width: 26rpx; height: 26rpx; border-radius: 50%; background: #fff; border: 6rpx solid var(--mx-g-200); box-sizing: border-box; }
+.sname { flex: 1; font-size: 29rpx; font-weight: 600; color: var(--mx-ink); }
+.sflag { flex: 0 0 auto; font-size: 22rpx; font-weight: 700; padding: 6rpx 18rpx; border-radius: var(--r-pill); }
+
+/* 区间节点（车辆可在此高亮） */
+.node.seg { padding: 10rpx 4rpx 10rpx 56rpx; }
+.node.seg .dot { width: 14rpx; height: 14rpx; border-width: 4rpx; border-color: var(--mx-g-300); }
+.node.bus .dot { background: var(--mx-g-600); border-color: var(--mx-g-300); box-shadow: 0 0 0 10rpx var(--mx-g-50); }
+/* 车辆图标位于路线左侧留白区（对齐原型 .node.seg .bus-ic 绝对定位） */
+.bus-ic {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 44rpx; height: 44rpx; border-radius: 50%;
+  background: var(--mx-g-600); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(8,127,102,0.35); z-index: 3;
+}
+.bus-ic-img { width: 26rpx; height: 26rpx; }
+
+/* 选中站点 */
+.node.selected .dot { background: var(--mx-g-700); border-color: var(--mx-g-700); box-shadow: 0 0 0 10rpx var(--mx-g-100); }
+.node.selected .sname { color: var(--mx-g-700); font-weight: 700; }
+.node.selected .sflag { background: var(--mx-amber-soft); color: var(--mx-amber); border: 2rpx solid var(--mx-amber); }

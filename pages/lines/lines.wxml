@@ -1,0 +1,113 @@
+<!-- 线路查询页（含线路详情滑入层）
+     文案替换点位统一在 utils/config.js 的 TEXT 中维护；接口地址/Mock 开关见同文件。
+     数据契约严格对齐老接口 loadDELines / loadCarMonitor（详见 DESIGN-SPEC.md §5）。
+     v4：已移除 wx:else 配对，改用并列 wx:if；无 * / style 块 / 不支持选择器。 -->
+
+<view class="screen {{detail.show ? 'locked' : ''}}">
+
+  <!-- 线路页状态栏占位（高度由系统状态栏决定，系统已绘制时间/胶囊，此处仅占位） -->
+  <view class="statusbar" style="height:{{statusBarHeight}}px;"></view>
+
+  <!-- 线路页导航栏（居中标题；右上胶囊由系统提供） -->
+  <view class="navbar">
+    <text class="nav-title">{{navTitle}}</text>
+  </view>
+
+  <!-- 线路列表主体 -->
+  <scroll-view class="pages" scroll-y>
+    <view class="search-row">
+      <view class="search-ic"></view>
+      <input class="search-input" placeholder="{{searchPlaceholder}}" placeholder-class="search-ph"
+             value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" />
+    </view>
+
+    <view class="line-list">
+      <view wx:for="{{lineCards}}" wx:key="code" class="line-card">
+        <view class="lc-top">
+          <text class="lc-name">{{item.name}}</text>
+        </view>
+        <view class="lc-dirs">
+          <view wx:for="{{item.dirs}}" wx:for-item="d" wx:key="dir"
+                class="dir-item" bindtap="onOpenDetail" data-code="{{item.code}}" data-dir="{{d.dir}}">
+            <view class="dir-endpoint">
+              <view class="de-row">{{d.start}}<text class="de-arrow"> → </text>{{d.end}}</view>
+              <view class="de-sub">{{d.label}} · {{d.time}}</view>
+            </view>
+            <text class="dir-time">{{d.timeFirst}}</text>
+            <text class="dir-chev">›</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{lineCards.length === 0}}" class="empty">{{emptyText}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- ================= 线路详情滑入层 ================= -->
+  <view class="detail {{detail.show ? 'open' : ''}}">
+
+    <!-- 顶部青绿连续出血区（状态栏占位 + 透明导航 + 监控卡） -->
+    <view class="detail-top">
+      <view class="statusbar dark" style="height:{{statusBarHeight}}px;"></view>
+      <view class="navbar transparent">
+        <view class="nav-back" bindtap="onCloseDetail">‹</view>
+        <text class="nav-title" style="color:#fff">{{detail.lineName}}</text>
+      </view>
+
+      <view class="monitor">
+        <!-- 羌寨碉楼剪影（对齐原型 .watchtowers） -->
+        <image class="watchtowers" src="{{watchtowers}}" mode="scaleToFill"></image>
+        <view class="m-top">
+          <text class="m-line">{{detail.monitor.lineName}}</text>
+          <view class="m-switch">
+            <view class="m-switch-btn {{detail.upDown === 0 ? 'on' : ''}}" bindtap="onSwitchDir" data-dir="0">去程</view>
+            <view class="m-switch-btn {{detail.upDown === 1 ? 'on' : ''}}" bindtap="onSwitchDir" data-dir="1">返程</view>
+          </view>
+        </view>
+        <view class="m-dir">开往 {{detail.monitor.lastStationName}} →</view>
+        <view class="m-meta">首末班 <text class="b">{{detail.monitor.sj}}</text></view>
+        <view class="m-divider"></view>
+        <view class="m-stat-row">
+          <text class="lab">选中站点</text>
+          <text class="val">{{detail.monitor.stationName}}</text>
+        </view>
+        <view class="m-arrival {{detail.soon ? 'soon' : ''}}">
+          <text class="big">{{detail.arrivalBig}}</text>
+          <text class="unit">{{detail.arrivalUnit}}</text>
+          <text class="sub">{{detail.arrivalSub}}</text>
+        </view>
+        <view class="m-near">最近车辆 距 <text class="b">{{detail.nearName}}</text> {{detail.nearStops}}</view>
+      </view>
+    </view>
+
+    <!-- 站点时间线 -->
+    <scroll-view class="pages-detail" scroll-y>
+      <view class="route-head">
+        <text class="t">途经站点</text>
+        <text class="cnt">共 {{detail.stations.length}} 站</text>
+        <view class="refresh" bindtap="onRefreshDetail">↻</view>
+      </view>
+      <view class="route">
+        <block wx:for="{{detail.routeNodes}}" wx:key="key">
+          <view wx:if="{{item.type === 'station'}}"
+                class="node station {{item.selected ? 'selected' : ''}} {{item.isBus ? 'bus' : ''}}"
+                bindtap="onSelectStation" data-index="{{item.index}}">
+            <view class="rail"><view class="dot"></view></view>
+            <view wx:if="{{item.isBus}}" class="bus-ic">
+              <image class="bus-ic-img" src="{{busIcon}}" mode="aspectFit"></image>
+            </view>
+            <text class="sname">{{item.name}}</text>
+            <text wx:if="{{item.flag}}" class="sflag">{{item.flag}}</text>
+          </view>
+          <view wx:if="{{item.type === 'seg'}}" class="node seg {{item.isBus ? 'bus' : ''}}">
+            <view class="rail"><view class="dot"></view></view>
+            <view wx:if="{{item.isBus}}" class="bus-ic">
+              <image class="bus-ic-img" src="{{busIcon}}" mode="aspectFit"></image>
+            </view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+</view>

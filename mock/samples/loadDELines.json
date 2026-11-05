@@ -1,0 +1,130 @@
+[
+  {
+    "lineCode": "249210",
+    "direction1": {
+      "start": "大邑高铁站",
+      "end": "王泗站",
+      "dir": 0,
+      "timeRange": "06:00-18:30"
+    },
+    "direction2": {
+      "start": "王泗站",
+      "end": "大邑高铁站",
+      "dir": 1,
+      "timeRange": "07:05-19:43"
+    },
+    "name": "大邑210路"
+  },
+  {
+    "lineCode": "249211",
+    "direction1": {
+      "start": "大邑高铁站",
+      "end": "鹤鸣山站",
+      "dir": 0,
+      "timeRange": "06:00-18:30"
+    },
+    "direction2": {
+      "start": "鹤鸣山站",
+      "end": "大邑高铁站",
+      "dir": 1,
+      "timeRange": "07:05-19:35"
+    },
+    "name": "大邑212路"
+  },
+  {
+    "lineCode": "249231",
+    "direction1": {
+      "start": "大邑高铁站",
+      "end": "芙蓉社区站",
+      "dir": 0,
+      "timeRange": "06:50-18:30"
+    },
+    "direction2": {
+      "start": "芙蓉社区站",
+      "end": "大邑高铁站",
+      "dir": 1,
+      "timeRange": "06:50-19:03"
+    },
+    "name": "大邑101路"
+  },
+  {
+    "lineCode": "249232",
+    "direction1": {
+      "start": "青霞街道办站",
+      "end": "远星橡胶厂站",
+      "dir": 0,
+      "timeRange": "06:30-18:30"
+    },
+    "direction2": {
+      "start": "远星橡胶厂站",
+      "end": "青霞街道办站",
+      "dir": 1,
+      "timeRange": "07:03-19:03"
+    },
+    "name": "大邑102路"
+  },
+  {
+    "lineCode": "249233",
+    "direction1": {
+      "start": "大邑高铁站",
+      "end": "文轩学院站",
+      "dir": 0,
+      "timeRange": "06:50-18:30"
+    },
+    "direction2": {
+      "start": "文轩学院站",
+      "end": "大邑高铁站",
+      "dir": 1,
+      "timeRange": "06:40-18:28"
+    },
+    "name": "大邑103路"
+  },
+  {
+    "lineCode": "249234",
+    "direction1": {
+      "start": "保利中央风景站",
+      "end": "文轩学院站",
+      "dir": 0,
+      "timeRange": "06:40-18:30"
+    },
+    "direction2": {
+      "start": "文轩学院站",
+      "end": "保利中央风景站",
+      "dir": 1,
+      "timeRange": "07:18-18:28"
+    },
+    "name": "大邑104路"
+  },
+  {
+    "lineCode": "249238",
+    "direction1": {
+      "start": "大邑高铁站",
+      "end": "幸福公社站",
+      "dir": 0,
+      "timeRange": "06:40-18:00"
+    },
+    "direction2": {
+      "start": "幸福公社站",
+      "end": "大邑高铁站",
+      "dir": 1,
+      "timeRange": "07:30-18:50"
+    },
+    "name": "大邑108路"
+  },
+  {
+    "lineCode": "251210",
+    "direction1": {
+      "start": "悦来站",
+      "end": "西岭镇站",
+      "dir": 0,
+      "timeRange": "06:00-18:00"
+    },
+    "direction2": {
+      "start": "西岭镇站",
+      "end": "悦来站",
+      "dir": 1,
+      "timeRange": "06:55-18:55"
+    },
+    "name": "大邑216路"
+  }
+]
