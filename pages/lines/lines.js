@@ -1,5 +1,6 @@
 const busService = require('../../services/bus.js');
 const config = require('../../utils/config.js');
+const { isRealBackend } = require('../../utils/request.js');
 const mockData = require('../../mock/data.js');
 const watchtowers = require('./watchtowers.js');
 
@@ -196,11 +197,17 @@ Page({
         length: (typeof s.length === 'number' && s.length > 0) ? s.length : 600
       })));
     } catch (e) {
-      console.warn('站点接口不可用，回退本地真实快照', e);
+      console.warn('站点接口不可用', e);
     }
     if (!byDir[0].length && !byDir[1].length) {
-      // 后端未启动时：用本地真实快照兜底（见 mock/data.js），保证仍可预览
-      byDir = [0, 1].map((d) => mockData.getStations(code, d));
+      // 本地快照只服务于 mock 环境（后端未启动时仍可预览）。
+      // real / prod 一律以真实后端为准：否则切换到茂县 SaaS 后，站点表会混入
+      // 旧页面大邑快照的站名，造成「列表是茂县、站点是大邑」的数据串源。
+      if (!isRealBackend()) {
+        byDir = [0, 1].map((d) => mockData.getStations(code, d));
+      } else {
+        console.warn('[stations] 真实后端未返回有效站点表，按契约不回退本地快照');
+      }
     }
     this._stationsCache = { code: String(code), byDir: byDir };
     return byDir;
