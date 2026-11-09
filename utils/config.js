@@ -45,6 +45,27 @@ module.exports = {
   POLL_MONITOR: 5000,
   POLL_GPS: 5000,
 
+  // ★ 详情页「按用户 GPS 默认选中最近站」（v8.6，见 utils/geo.js）
+  //   enabled      : 总开关；改 false 即完全回到旧的「首辆车下一站」逻辑，无需改页面代码
+  //   maxDistance  : 用户距最近站超过该米数则不覆盖，避免用户不在该线路附近时 ETA 异常
+  //   stationCoord : 后端 /geo_data/stations 的 point.lon/lat 坐标系，'wgs84' | 'gcj02'。
+  //                  接口未声明坐标系，默认按车载 GPS 原始 WGS84 处理并转 gcj02 后比对；
+  //                  ⚠️ 真机核对后若发现站点本身是 gcj02，改成 'gcj02' 即不做任何转换
+  //   gpsCoord     : wx.getLocation 的坐标系，必须与 utils/location.js 的 TYPE 保持一致
+  NEAREST_STATION: {
+    enabled: true,
+    maxDistance: 1500,
+    stationCoord: 'wgs84',
+    gpsCoord: 'gcj02'
+  },
+
+  // ★ 仅本地联调：模拟「用户正站在某站点」的坐标，用于人不到现场时验证最近站链路。
+  //   默认 null = 正常调用 wx.getLocation 取真实定位。
+  //   填写格式（gcj02，须与 location.js 的 TYPE 一致）：
+  //     DEBUG_LOCATION: { latitude: 30.586701, longitude: 103.525198 }
+  //   ⚠️ 提审 / 上线前必须改回 null，否则所有用户都会被当成站在同一位置。
+  DEBUG_LOCATION: null,
+
   // 接口路径（入参、返回结构与旧接口完全一致）
   API: {
     loadDELines: '/carMonitor/loadDELines',

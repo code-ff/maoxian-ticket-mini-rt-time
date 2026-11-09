@@ -1,5 +1,7 @@
 const busService = require('../../services/bus.js');
 const config = require('../../utils/config.js');
+const location = require('../../utils/location.js');
+const geo = require('../../utils/geo.js');
 const { isRealBackend } = require('../../utils/request.js');
 const mockData = require('../../mock/data.js');
 const watchtowers = require('./watchtowers.js');
@@ -105,6 +107,8 @@ Page({
 
   onUnload() {
     this.stopTimers();
+    this._unwatchLocation && this._unwatchLocation();
+    this._unwatchLocation = null;
   },
 
   // 旧页面 beforeunload 清理定时器；小程序切后台同样暂停，回前台恢复并立即刷新一次
@@ -190,12 +194,21 @@ Page({
     try {
       const rs = await busService.getStations(code);
       const raw = (rs && rs.stations) || [];
-      byDir = [0, 1].map((d) => (raw[d] || []).map((s) => ({
-        code: String(s.stationCode),
-        name: s.name,
-        no: s.serialNo,
-        length: (typeof s.length === 'number' && s.length > 0) ? s.length : 600
-      })));
+      byDir = [0, 1].map((d) => (raw[d] || []).map((s) => {
+        const pt = s.point || {};
+        const lon = Number(pt.lon != null ? pt.lon : s.lon);
+        const lat = Number(pt.lat != null ? pt.lat : s.lat);
+        return {
+          code: String(s.stationCode),
+          name: s.name,
+          no: s.serialNo,
+          length: (typeof s.length === 'number' && s.length > 0) ? s.length : 600,
+          // v8.6：保留站点经纬度，供 geo.nearestStation 计算「离用户最近的站」。
+          // 仅补字段（本地兜底 mockData.getStations 已带 lon/lat），不改原有渲染 / 轮询 / 状态机。
+          lon: isFinite(lon) ? lon : 0,
+          lat: isFinite(lat) ? lat : 0
+        };
+      }));
     } catch (e) {
       console.warn('站点接口不可用', e);
     }
@@ -246,9 +259,49 @@ Page({
     const byDir = await this.ensureStations(code);
     if (seq !== this._detailSeq) return; // 期间切换了线路/方向，丢弃过期结果
     this.setData({ 'detail.stations': byDir[dir] || [] });
-    // 先拉 GPS 确定默认选中站（首辆车下一站），再拉监控头
+    this._userPickedStation = false;
+
+    // 定位可能晚于站点表返回（授权弹窗 / 高精度定位耗时）。未就绪时订阅一次。
+    // 回调不传 seq：始终读取「当前」detail.stations，因此换向 / 换线路后定位才到，
+    // 也能按当下这条方向的站点序列重算，不会被旧的详情序号拦掉。
+    this._unwatchLocation && this._unwatchLocation();
+    this._unwatchLocation = null;
+    if (!location.getLastLocation()) {
+      this._unwatchLocation = location.whenReady(() => { this.applyNearestStation(); });
+    }
+
+    // 先拉 GPS 确定默认选中站（最近站优先，失败回退首辆车下一站），再拉监控头
     this.loadGps(code, dir, true);
     this.startTimers(code, dir);
+  },
+
+  /**
+   * 定位晚到时重算默认选中站（v8.6）。
+   * 沿用 geo.pickDefaultIndex 的三重保护：总开关 / 定位与坐标缺失 / 距离阈值；
+   * 任何一步不满足都静默保持原默认，不打断正在进行的轮询与用户操作。
+   */
+  applyNearestStation(seq) {
+    if (!config.NEAREST_STATION.enabled) return;
+    if (!this.data.detail.show || this._userPickedStation) return;
+    // seq 可选：未传时按「当前详情」处理，兼容换向 / 换线路后定位才到的场景
+    if (seq != null && seq !== this._detailSeq) return;
+    const sts = this.data.detail.stations || [];
+    if (!sts.length) return;
+    const picked = geo.pickDefaultIndex(
+      location.getLastLocation(), sts, this.data.detail.selected, config.NEAREST_STATION
+    );
+    if (picked.reason !== 'nearest') {
+      console.log('[GPS] 定位晚到，最近站未通过阈值校验（' + picked.reason + '），保持原默认选中',
+        picked.near ? ('最近站 ' + picked.near.name + ' ' + Math.round(picked.distance) + 'm') : '');
+      return;
+    }
+    if (picked.index === this.data.detail.selected) return;
+    this.setData({ 'detail.selected': picked.index });
+    const selCode = sts[picked.index] ? sts[picked.index].code : '';
+    this.loadMonitor(this.data.detail.lineCode, this.data.detail.upDown, selCode);
+    this.renderRoute();
+    console.log('[GPS] 定位晚到，重算默认选中站：',
+      picked.near.name, Math.round(picked.distance) + 'm', 'index=' + picked.index);
   },
 
   // 车辆 GPS / 站点位置（串行轮询）
@@ -282,13 +335,40 @@ Page({
         });
       this.setData({ 'detail.buses': buses });
 
-      // 默认选中站：首辆车的“下一站”（保证有车驶近，ETA 为正）；用户未手动选站时也维持
+      // 默认选中站（v8.6）：优先「离用户 GPS 最近的站」；定位缺失 / 超出距离阈值 /
+      // 功能关闭 / 用户已手动选站时，原样回退到旧的「首辆车下一站」（保证 ETA 有车驶近、为正）。
       if (isInit || this.data.detail.selected == null) {
         const firstFrac = buses.length ? Math.floor(buses[0].frac + 0.0001) : 0;
-        const sel = Math.min(firstFrac + 1, Math.max(0, N - 1));
+        const fallback = Math.min(firstFrac + 1, Math.max(0, N - 1));
+        // 注意不能只判 isInit：用户「取消选中」后 selected 变 null，5s 轮询会走这个分支补选，
+        // 此时同样应按最近站口径，避免与首次进入不一致（用户手动选过站则一律不覆盖）。
+        const picked = (!this._userPickedStation)
+          ? geo.pickDefaultIndex(location.getLastLocation(), sts, fallback, config.NEAREST_STATION)
+          : { index: fallback, reason: 'fallback', distance: null, near: null };
+        const sel = picked.index;
         this.setData({ 'detail.selected': sel });
         const selCode = sts[sel] ? sts[sel].code : '';
         this.loadMonitor(code, upDown, selCode);
+        if (isInit) {
+          const locDiag = location.getLastLocation();
+          const nearTxt = picked.near
+            ? (picked.near.name + ' ' + Math.round(picked.distance) + 'm')
+            : '无有效站点坐标';
+          console.log('[GPS] 默认选中站：',
+            picked.reason === 'nearest'
+              ? ('最近站 ' + nearTxt)
+              : ('回退原有逻辑（' + picked.reason + '）'),
+            'index=' + sel);
+          // v8.7 定位自检：一行打全判断依据，便于「人不到现场」也能核对 GPS 是否正确。
+          // 纯 console 输出，不参与任何业务判断；too-far 本身即证明定位成功且坐标有效。
+          console.log('[GPS] 定位自检：',
+            '坐标 =', locDiag ? (locDiag.latitude + ',' + locDiag.longitude) : '未获取到',
+            locDiag && locDiag.debug ? '(模拟坐标)' : '',
+            '| 精度 =', (locDiag && locDiag.accuracy != null) ? (Math.round(locDiag.accuracy) + 'm') : '未知',
+            '| 最近站 =', nearTxt,
+            '| 阈值 =', config.NEAREST_STATION.maxDistance + 'm',
+            '| 站点坐标系 =', config.NEAREST_STATION.stationCoord);
+        }
       }
       this.renderRoute();
     } catch (e) {
@@ -400,6 +480,7 @@ Page({
     const code = this.data.detail.lineCode;
     this._detailSeq = (this._detailSeq || 0) + 1;
     this.stopTimers();
+    this._userPickedStation = false;   // 换向视作重新进入详情，允许按新方向的站点序列重选最近站
     const cached = (this._stationsCache && this._stationsCache.code === String(code)) ? this._stationsCache.byDir : null;
     this.setData({
       'detail.upDown': dir,
@@ -426,13 +507,18 @@ Page({
     const sel = this.data.detail.selected;
     const newSel = (sel === i ? null : i);
     this.setData({ 'detail.selected': newSel });
+    // 用户一旦手动选站，后续定位晚到不再覆盖；取消选中则重新允许按最近站回退
+    this._userPickedStation = (newSel != null);
 
     const N = this.data.detail.stations.length;
     let idx = newSel;
     if (newSel == null) {
-      // 取消选中 → 回退到默认（首辆车下一站）
+      // 取消选中 → 回退到默认（最近站优先，失败回退首辆车下一站，与首次进入口径一致）
       const firstFrac = this.data.detail.buses[0] ? Math.floor(this.data.detail.buses[0].frac + 0.0001) : 0;
-      idx = Math.min(firstFrac + 1, Math.max(0, N - 1));
+      const fallback = Math.min(firstFrac + 1, Math.max(0, N - 1));
+      idx = geo.pickDefaultIndex(
+        location.getLastLocation(), this.data.detail.stations, fallback, config.NEAREST_STATION
+      ).index;
     }
     const selCode = this.data.detail.stations[idx] ? this.data.detail.stations[idx].code : '';
     this.loadMonitor(this.data.detail.lineCode, this.data.detail.upDown, selCode);
@@ -452,6 +538,8 @@ Page({
   onCloseDetail() {
     this._detailSeq = (this._detailSeq || 0) + 1;
     this.stopTimers();
+    this._unwatchLocation && this._unwatchLocation();
+    this._unwatchLocation = null;
     this.setData({ 'detail.show': false });
   },
 

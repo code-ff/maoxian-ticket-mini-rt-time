@@ -12,6 +12,12 @@
     "enablePullDownRefresh": false
   },
   "style": "v2",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于定位并默认选中离您最近的公交站点"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"],
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"
 }
